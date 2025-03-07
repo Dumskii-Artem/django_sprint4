@@ -45,9 +45,10 @@ class Location(TimestampModel):
         verbose_name_plural = 'Местоположения'
 
     def __str__(self):
-        return (f'{self.id} '
-                f'{self.name[:50]} Добавлен:{self.created_at:%d.%m.%Y} '
-                f' {"Опубликован" if self.is_published else "Не опубликован"}')
+        return (f'{self.name[:50]}')
+        # return (f'{self.id} '
+        #         f'{self.name[:50]} Добавлен:{self.created_at:%d.%m.%Y} '
+        #         f' {"Опубликован" if self.is_published else "Не опубликован"}')
 
 
 class Post(TimestampModel):
@@ -55,6 +56,8 @@ class Post(TimestampModel):
 
     title = models.CharField('Заголовок', max_length=256)
     text = models.TextField('Текст')
+    image = models.ImageField(
+        'Изображение', upload_to='posts_images', blank=True, null=True)
     pub_date = models.DateTimeField(
         'Дата и время публикации',
         help_text='Если установить дату и время в будущем — можно делать '
@@ -88,3 +91,28 @@ class Post(TimestampModel):
 
     def __str__(self):
         return self.title[:50]
+
+
+class Comment(TimestampModel):
+    """Комментарий"""
+
+    text = models.TextField('Текст комментария', default='---Пусто---')
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment',
+        verbose_name='Автор комментария'
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='comment',
+        verbose_name='Комментируемый пост'
+    )
+
+    class Meta:
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return f'Комментарий {self.author.username} поста {self.post.title}'
