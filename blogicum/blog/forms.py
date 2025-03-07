@@ -19,16 +19,6 @@ class PostForm(forms.ModelForm):
         widgets = {'pub_date': forms.DateInput(attrs={'type': 'date'})}
 
 
-# class PostCreateForm(forms.ModelForm):
-
-#     class Meta:
-#         model = Post
-#         fields = ('title', 'text', 'pub_date', 'location', 'category', 'image')
-#         widgets = {
-#             'pub_date': forms.DateInput(attrs={'type': 'date'})
-#         }
-
-
 class CommentCreateForm(forms.ModelForm):
     class Meta:
         model = Comment
