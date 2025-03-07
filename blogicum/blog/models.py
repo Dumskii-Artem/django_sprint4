@@ -46,9 +46,6 @@ class Location(TimestampModel):
 
     def __str__(self):
         return (f'{self.name[:50]}')
-        # return (f'{self.id} '
-        #         f'{self.name[:50]} Добавлен:{self.created_at:%d.%m.%Y} '
-        #         f' {"Опубликован" if self.is_published else "Не опубликован"}')
 
 
 class Post(TimestampModel):
