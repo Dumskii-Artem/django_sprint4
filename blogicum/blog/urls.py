@@ -7,9 +7,9 @@ app_name = 'blog'
 
 urlpatterns = [
     path('', views.PostListView.as_view(), name='index'),
-    path('post/create/', views.PostCreateView.as_view(), name='create_post'),
+    path('posts/create/', views.PostCreateView.as_view(), name='create_post'),
 
-    path('posts/<int:post_id>/edit/', views.PostEditView.as_view(),
+    path('posts/<int:post_id>/edit/', views.edit_post,
          name='edit_post'),
     path('posts/<int:post_id>/delete/', views.delete_post,
          name='delete_post'),

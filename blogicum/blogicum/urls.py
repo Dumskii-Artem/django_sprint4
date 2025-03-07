@@ -7,9 +7,8 @@ from django.views.generic.edit import CreateView
 from django.urls import include, path, reverse_lazy
 from blog.views import CustomLoginView
 
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.custom_500'
-
+handler404 = 'pages.views.error404'
+handler500 = 'pages.views.error500'
 
 urlpatterns = [
     path('', include('blog.urls', namespace='blog')),
@@ -26,4 +25,6 @@ urlpatterns = [
     ),
     path('auth/login/', CustomLoginView.as_view(), name='login'),
     path('auth/', include('django.contrib.auth.urls')),
+
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

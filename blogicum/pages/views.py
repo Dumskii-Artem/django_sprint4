@@ -14,6 +14,10 @@ def error404(request, exception=None):
     return render(request, 'pages/404.html', status=404)
 
 
+class Error403Page(TemplateView):
+    template_name = 'pages/403csrf.html'
+
+
 def error403csrf(request, reason=''):
     return render(request, 'pages/403csrf.html', status=403)
 

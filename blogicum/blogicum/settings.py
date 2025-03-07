@@ -139,7 +139,7 @@ STATICFILES_DIRS = [
 LOGIN_REDIRECT_URL = 'blog:profile'
 LOGIN_URL = 'login'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+CSRF_FAILURE_VIEW = 'pages.views.error403csrf'
 
 MEDIA_URL = '/media/'
 

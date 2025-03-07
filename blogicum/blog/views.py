@@ -8,9 +8,8 @@ from django.db.models.query import QuerySet
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from django.urls import reverse_lazy
-from django.views.generic import (CreateView, ListView,
-                                  DetailView, UpdateView)
+from django.urls import reverse_lazy, reverse
+from django.views.generic import CreateView, ListView, DetailView
 
 from .models import Category, Post, Comment
 from .forms import (CommentCreateForm,
@@ -44,7 +43,7 @@ class PostListView(ListView):
     model = Post
     paginate_by = 10
     template_name = "blog/index.html"
-    queryset = get_published_posts()
+    queryset = get_published_posts().order_by('-pub_date')
 
 
 @login_required
@@ -62,12 +61,34 @@ def delete_post(request, post_id):
     )
 
 
-class PostEditView(OnlyAuthorMixin, UpdateView):
-    model = Post
-    form_class = PostForm
-    pk_url_kwarg = 'post_id'
-    template_name = 'blog/create.html'
-    success_url = reverse_lazy('blog.list')
+# class PostEditView(OnlyAuthorMixin, UpdateView):
+#     model = Post
+#     form_class = PostForm
+#     pk_url_kwarg = 'post_id'
+#     template_name = 'blog/create.html'
+#     success_url = reverse_lazy('blog.list')
+
+#     def dispatch(self, request, *args, **kwargs):
+#         if not request.user.is_authenticated:
+#             p_id = self.kwargs.get('post_id')
+#             return redirect('blog:post_detail', post_id=p_id)
+#         return super().dispatch(request, *args, **kwargs)
+
+@login_required()
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if post.author != request.user:
+        return redirect('blog:post_detail', post_id=post_id)
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('blog:post_detail', post_id=post_id)
+    else:
+        form = PostForm(instance=post)
+    return render(
+        request, 'blog/create.html', {'form': form, 'post': post}
+    )
 
 
 @login_required
@@ -157,7 +178,7 @@ class CategoryPostListView(ListView):
             Category,
             slug=self.kwargs.get('category_slug'),
             is_published=True)
-        return get_published_posts(category.post)
+        return get_published_posts(category.post).order_by('-pub_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -172,7 +193,12 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     template_name = 'blog/create.html'
     form_class = PostForm
-    success_url = reverse_lazy('blog:index')
+
+    def get_success_url(self):
+        return reverse(
+            'blog:profile',
+            kwargs={'username': self.request.user.username}
+        )
 
     def form_valid(self, form):
         # Присвоить полю author объект пользователя из запроса.
@@ -204,9 +230,10 @@ class UserDetailView(DetailView):
         context['user'] = self.request.user
 
         posts = (
-            get_published_posts()
+            Post.objects
             .filter(author=profile.id)
             .annotate(comment_count=Count('comment'))
+            .order_by('-pub_date')
         )
 
         paginator = Paginator(posts, 10)
