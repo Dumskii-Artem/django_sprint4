@@ -11,11 +11,12 @@ from django.utils import timezone
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, ListView, DetailView
 
-from .models import Category, Post, Comment
 from .forms import (CommentCreateForm,
                     PostForm,
                     UserEditForm)
+from .models import Category, Post, Comment
 
+POSTS_ON_PAGE = 10
 
 User = get_user_model()
 
@@ -27,30 +28,40 @@ class OnlyAuthorMixin(UserPassesTestMixin):
         return self.get_object().author == self.request.user
 
 
-def get_published_posts(posts: QuerySet = Post.objects.all()):
-    return posts.select_related(
-        'category', 'location', 'author'
-    ).filter(
-        pub_date__lt=timezone.now(),
-        is_published=True,
-        category__is_published=True
-    ).annotate(
-        comment_count=Count('comment')
-    )
+def get_published_posts(
+        posts: QuerySet = Post.objects.all(),
+        use_filtering: bool = True,
+        use_select_related: bool = True,
+        use_annotation: bool = True):
+
+    query = posts
+    if use_filtering:
+        query = query.filter(
+            pub_date__lt=timezone.now(),
+            is_published=True,
+            category__is_published=True
+        )
+    if use_select_related:
+        query = query.select_related('category', 'location', 'author')
+    if use_annotation:
+        query = query.annotate(comment_count=Count('comments'))
+    return query.order_by('-pub_date')
 
 
 class PostListView(ListView):
     model = Post
-    paginate_by = 10
-    template_name = "blog/index.html"
-    queryset = get_published_posts().order_by('-pub_date')
+    paginate_by = POSTS_ON_PAGE
+    template_name = 'blog/index.html'
+    queryset = get_published_posts()
 
 
 @login_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
-        return redirect('blog:post_detail', post_id=post_id)
+#        return redirect(f'blog:post_detail/{post_id}')
+#        return redirect('blog:post_detail', post_id=post_id)
+        return redirect('blog:post_detail')
     if request.method == 'POST':
         post.delete()
         return redirect('blog:profile', username=request.user.username)
@@ -60,19 +71,6 @@ def delete_post(request, post_id):
         {'post': post, 'form': PostForm(instance=post)}
     )
 
-
-# class PostEditView(OnlyAuthorMixin, UpdateView):
-#     model = Post
-#     form_class = PostForm
-#     pk_url_kwarg = 'post_id'
-#     template_name = 'blog/create.html'
-#     success_url = reverse_lazy('blog.list')
-
-#     def dispatch(self, request, *args, **kwargs):
-#         if not request.user.is_authenticated:
-#             p_id = self.kwargs.get('post_id')
-#             return redirect('blog:post_detail', post_id=p_id)
-#         return super().dispatch(request, *args, **kwargs)
 
 @login_required()
 def edit_post(request, post_id):
@@ -86,6 +84,11 @@ def edit_post(request, post_id):
             return redirect('blog:post_detail', post_id=post_id)
     else:
         form = PostForm(instance=post)
+    # form = PostForm(request.POST or None,
+    #                 instance=post if request.method == 'POST' else None)
+    # if request.method == 'POST' and form.is_valid():
+    #     form.save()
+    #     return redirect('blog:post_detail', post_id=post_id)
     return render(
         request, 'blog/create.html', {'form': form, 'post': post}
     )
@@ -170,7 +173,7 @@ class PostDetailView(DetailView):
 
 class CategoryPostListView(ListView):
     model = Post
-    paginate_by = 10
+    paginate_by = POSTS_ON_PAGE
     template_name = "blog/category.html"
 
     def get_queryset(self):
@@ -178,7 +181,7 @@ class CategoryPostListView(ListView):
             Category,
             slug=self.kwargs.get('category_slug'),
             is_published=True)
-        return get_published_posts(category.post).order_by('-pub_date')
+        return get_published_posts(category.posts)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -222,21 +225,17 @@ class UserDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        profile = get_object_or_404(
+        author = get_object_or_404(
             User,
             username=self.kwargs['username']
         )
-        context['profile'] = profile
-        context['user'] = self.request.user
+        context['profile'] = author
+        # context['user'] = self.request.user
 
-        posts = (
-            Post.objects
-            .filter(author=profile.id)
-            .annotate(comment_count=Count('comment'))
-            .order_by('-pub_date')
-        )
+        posts = (get_published_posts(use_select_related=False)
+                 .filter(author=author.id))
 
-        paginator = Paginator(posts, 10)
+        paginator = Paginator(posts, POSTS_ON_PAGE)
         page_number = self.request.GET.get('page')
 
         context['page_obj'] = paginator.get_page(page_number)
@@ -246,9 +245,6 @@ class UserDetailView(DetailView):
 
 @login_required
 def edit_profile(request):
-    print('<<-')
-    print(request)
-    print('->>')
     if request.method == 'POST':
         form = UserEditForm(request.POST, instance=request.user)
         if form.is_valid():

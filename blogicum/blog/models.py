@@ -30,6 +30,7 @@ class Category(TimestampModel):
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
+        ordering = ('title',)
 
     def __str__(self):
         return self.title[:50]
@@ -43,9 +44,20 @@ class Location(TimestampModel):
     class Meta:
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
+        ordering = ('name',)
 
     def __str__(self):
-        return (f'{self.name[:50]}')
+        return self.name[:50]
+
+
+# class PostRelatedNameMixin(TimestampModel):
+#     class Meta:
+#         abstract = True
+
+#     @staticmethod
+#     def reladed_fk(to, **kwargs):
+#         kwargs.setdefault('related_name', 'posts')
+#         return models.ForeignKey(to, **kwargs)
 
 
 class Post(TimestampModel):
@@ -62,7 +74,6 @@ class Post(TimestampModel):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='post',
         verbose_name='Автор публикации'
     )
     location = models.ForeignKey(
@@ -70,14 +81,12 @@ class Post(TimestampModel):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='post',
         verbose_name='Местоположение'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='post',
         verbose_name='Категория'
     )
 
@@ -85,6 +94,7 @@ class Post(TimestampModel):
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
+        default_related_name = 'posts'
 
     def __str__(self):
         return self.title[:50]
@@ -93,23 +103,22 @@ class Post(TimestampModel):
 class Comment(TimestampModel):
     """Комментарий"""
 
-    text = models.TextField('Текст комментария', default='---Пусто---')
+    text = models.TextField('Текст')
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comment',
-        verbose_name='Автор комментария'
+        verbose_name='Автор'
     )
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name='comment',
         verbose_name='Комментируемый пост'
     )
 
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
 
     def __str__(self):
         return f'Комментарий {self.author.username} поста {self.post.title}'

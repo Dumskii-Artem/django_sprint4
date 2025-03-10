@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Category, Post, Location, Comment
 
 
+@admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     """PostAdmin."""
 
@@ -28,5 +29,4 @@ class PostAdmin(admin.ModelAdmin):
 
 admin.site.register(Category)
 admin.site.register(Location)
-admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)

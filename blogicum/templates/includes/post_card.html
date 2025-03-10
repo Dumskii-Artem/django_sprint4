@@ -19,7 +19,7 @@
           категории {% include "includes/category_link.html" %}
         </small>
       </h6>
-      <p class="card-text">{{ post.text|truncatewords:10 }}</p>
+      <p class="card-text">{{ post.text|linebreaksbr|truncatewords:10 }}</p>
       <a href="{% url 'blog:post_detail' post.id %}" class="card-link">Читать полный текст</a>
       <a href="{% url 'blog:post_detail' post.id %}" class="card-link text-muted">Комментарии ({{ post.comment_count }})</a>
     </div>
