@@ -1,6 +1,7 @@
-from django.contrib.auth import get_user_model
+#from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.db.models import Count
@@ -18,7 +19,13 @@ from .models import Category, Post, Comment
 
 POSTS_ON_PAGE = 10
 
-User = get_user_model()
+# User = get_user_model()
+
+
+def get_paginator(request, items, num=10):
+    paginator = Paginator(items, num)
+    num_pages = request.GET.get('page')
+    return paginator.get_page(num_pages)
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
@@ -60,8 +67,8 @@ def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
 #        return redirect(f'blog:post_detail/{post_id}')
-#        return redirect('blog:post_detail', post_id=post_id)
-        return redirect('blog:post_detail')
+        return redirect('blog:post_detail', post_id=post_id)
+        #return redirect('blog:post_detail')
     if request.method == 'POST':
         post.delete()
         return redirect('blog:profile', username=request.user.username)
@@ -230,10 +237,19 @@ class UserDetailView(DetailView):
             username=self.kwargs['username']
         )
         context['profile'] = author
-        # context['user'] = self.request.user
+#        context['user'] = self.request.user
 
-        posts = (get_published_posts(use_select_related=False)
-                 .filter(author=author.id))
+        # posts = (
+        #     Post.objects
+        #     .filter(author=author.id)
+        #     .annotate(comment_count=Count('comments'))
+        #     .order_by('-pub_date')
+        # )
+
+        posts = (get_published_posts(
+                 use_select_related=False,
+                 use_filtering=False
+                 ).filter(author=author.id))
 
         paginator = Paginator(posts, POSTS_ON_PAGE)
         page_number = self.request.GET.get('page')
