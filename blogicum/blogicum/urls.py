@@ -1,11 +1,12 @@
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import path, include
+from django.contrib import admin
 from django.contrib.auth.forms import UserCreationForm
+#from django.contrib.auth.views import LoginView
 from django.views.generic.edit import CreateView
-from django.urls import include, path, reverse_lazy
-from blog.views import CustomLoginView
+from django.urls import include, path, reverse_lazy, path, include
+
+from blog.views import UserLoginView
 
 handler404 = 'pages.views.error404'
 handler500 = 'pages.views.error500'
@@ -14,6 +15,7 @@ urlpatterns = [
     path('', include('blog.urls', namespace='blog')),
     path('pages/', include('pages.urls', namespace='pages')),
     path('admin/', admin.site.urls),
+
     path(
         'auth/registration/',
         CreateView.as_view(
@@ -23,7 +25,14 @@ urlpatterns = [
         ),
         name='registration',
     ),
-    path('auth/login/', CustomLoginView.as_view(), name='login'),
+
+    path(
+        'auth/login/',
+        UserLoginView.as_view(
+            template_name='registration/login.html'
+        ),
+        name='login'),
+
     path('auth/', include('django.contrib.auth.urls')),
 
 

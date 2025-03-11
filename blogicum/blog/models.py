@@ -51,16 +51,6 @@ class Location(TimestampModel):
         return self.name[:50]
 
 
-# class PostRelatedNameMixin(TimestampModel):
-#     class Meta:
-#         abstract = True
-
-#     @staticmethod
-#     def reladed_fk(to, **kwargs):
-#         kwargs.setdefault('related_name', 'posts')
-#         return models.ForeignKey(to, **kwargs)
-
-
 class Post(TimestampModel):
     """Публикация."""
 

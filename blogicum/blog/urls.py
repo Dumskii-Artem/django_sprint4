@@ -26,7 +26,7 @@ urlpatterns = [
          views.delete_comment, name='delete_comment'),
 
     path('profile/edit/', views.edit_profile, name='edit_profile'),
-    path('profile/<slug:username>/', views.UserDetailView.as_view(),
+    path('profile/<str:username>/', views.UserDetailView.as_view(),
          name='profile'),
 
     path('category/<slug:category_slug>/',

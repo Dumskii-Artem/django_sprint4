@@ -18,6 +18,9 @@ class PostForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['author',]
         widgets = {'pub_date': forms.DateInput(attrs={'type': 'date'})}
+        # widgets = {
+        #     'pub_date': forms.DateInput(attrs={'type': 'date'}),
+        #     'text': forms.Textarea(attrs={'rows': 4, 'cols': 50})}
 
 
 class CommentCreateForm(forms.ModelForm):
