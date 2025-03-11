@@ -15,12 +15,8 @@ class UserEditForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = '__all__'
-        exclude = ['author', ]
+        exclude = ('author', )
         widgets = {'pub_date': forms.DateInput(attrs={'type': 'date'})}
-        # widgets = {
-        #     'pub_date': forms.DateInput(attrs={'type': 'date'}),
-        #     'text': forms.Textarea(attrs={'rows': 4, 'cols': 50})}
 
 
 class CommentCreateForm(forms.ModelForm):

@@ -135,7 +135,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static_dev',
 ]
 
-LOGIN_REDIRECT_URL = 'blog:profile'
+LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 
 CSRF_FAILURE_VIEW = 'pages.views.error403csrf'
