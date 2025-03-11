@@ -1,4 +1,4 @@
-#from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
@@ -6,7 +6,7 @@ from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.models.query import QuerySet
-from django.http import Http404
+# from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
@@ -79,7 +79,7 @@ def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
         return redirect('blog:post_detail', post_id=post_id)
-    
+
     form = PostForm(request.POST or None, instance=post)
     if form.is_valid():
         form.save()
@@ -172,7 +172,7 @@ class CategoryPostListView(ListView):
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
-            **kwargs, 
+            **kwargs,
             category=self.get_category_or_404()
         )
 
@@ -241,6 +241,7 @@ class UserDetailView(DetailView):
             posts = get_published_posts()
         context['page_obj'] = get_paginator_page(self.request, posts)
         return context
+
 
 @login_required
 def edit_profile(request):
