@@ -38,7 +38,6 @@ def get_published_posts(
     use_filtering: bool = True,
     use_select_related: bool = True,
     use_annotation: bool = True,
-    use_ordering: bool = True
 ):
     if use_filtering:
         posts = posts.filter(
@@ -49,9 +48,11 @@ def get_published_posts(
     if use_select_related:
         posts = posts.select_related('category', 'location', 'author')
     if use_annotation:
-        posts = posts.annotate(comment_count=Count('comments'))
-    if use_ordering:
-        posts = posts.order_by(*Post._meta.ordering)
+        posts = posts.annotate(
+            comment_count=Count('comments')
+        ).order_by(
+            *Post._meta.ordering
+        )
     return posts
 
 
@@ -80,12 +81,12 @@ def delete_post(request, post_id):
 def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author != request.user:
-        return redirect('blog:post_detail', post_id=post_id)
+        return redirect('blog:post_detail', post_id)
 
     form = PostForm(request.POST or None, instance=post)
     if form.is_valid():
         form.save()
-        return redirect('blog:post_detail', post_id=post_id)
+        return redirect('blog:post_detail', post_id)
 
     return render(request, 'blog/create.html', {
         'form': form,
@@ -140,14 +141,14 @@ class PostDetailView(DetailView):
     template_name = 'blog/detail.html'
 
     def get_object(self):
-        post = get_object_or_404(Post.objects.all(), id=self.kwargs['post_id'])
+        post = super().get_object()
         if post.author == self.request.user:
             return post
-        return get_object_or_404(
+        return super().get_object(
             get_published_posts(
                 use_select_related=False,
                 use_annotation=False
-            ), id=self.kwargs['post_id'])
+            ))
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(
@@ -201,15 +202,17 @@ class UserDetailView(DetailView):
     template_name = 'blog/profile.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        author = self.get_object()
-        context['profile'] = author
-        posts = get_published_posts(
-            posts=author.posts.all(),
-            use_filtering=(self.request.user != author)
+        return super().get_context_data(
+            **kwargs,
+            profile=self.get_object(),
+            page_obj=get_paginator_page(
+                self.request, 
+                get_published_posts(
+                    posts=self.get_object().posts.all(),
+                    use_filtering=(self.request.user != self.get_object())
+                )
+            )
         )
-        context['page_obj'] = get_paginator_page(self.request, posts)
-        return context
 
 
 @login_required
@@ -217,7 +220,7 @@ def edit_profile(request):
     form = UserEditForm(request.POST or None, instance=request.user)
     if form.is_valid():
         form.save()
-        return redirect('blog:profile', username=request.user.username)
+        return redirect('blog:profile', request.user.username)
     return render(request, 'blog/user.html', {
         'form': form,
     })
