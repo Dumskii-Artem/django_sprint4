@@ -102,7 +102,7 @@ def edit_comment(request, post_id, comment_id):
         form.save()
         return redirect('blog:post_detail', post_id=post_id)
     return render(request, 'blog/comment.html', {
-        'form': form, 
+        'form': form,
         'comment': comment,
     })
 
