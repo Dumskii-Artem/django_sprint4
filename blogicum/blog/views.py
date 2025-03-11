@@ -206,7 +206,7 @@ class UserDetailView(DetailView):
             **kwargs,
             profile=self.get_object(),
             page_obj=get_paginator_page(
-                self.request, 
+                self.request,
                 get_published_posts(
                     posts=self.get_object().posts.all(),
                     use_filtering=(self.request.user != self.get_object())
